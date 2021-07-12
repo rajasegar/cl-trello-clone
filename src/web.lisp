@@ -23,8 +23,8 @@
 ;; Boards
 (defvar *board* '((:name "To Do" :id 1 :cards ((:id 1 :label "First Card" :list 1)
                                                 (:id 2 :label "Second Card" :list 1)))
-                   (:name "Doing" :id 2 :cards ((:id 1 :label "First Card" :list 2)
-                                                (:id 2 :label "Second Card" :list 2)))))
+                   (:name "Doing" :id 2 :cards ((:id 3 :label "First Card" :list 2)
+                                                (:id 4 :label "Second Card" :list 2)))))
 
 ;;
 ;; Routing rules
@@ -42,6 +42,40 @@
   (let ((name (cdr (assoc "name" _parsed :test #'string=))))
     (push (list :name name :id (+ 1 (length *board*)) :cards ()) *board*)
     (render #P"_board.html" (list :board (reverse *board*)))))
+
+(defroute ("/cards/new/:list-id" :method :POST) (&key list-id _parsed)
+  (format t "~a~%" _parsed)
+  (let ((card (list :label "hello" :list-id list-id :id (get-universal-time))))
+  (render #P"_new-card.html" (list :card card :list (find-list list-id)))))
+
+(defun find-list (id)
+  "find list from board based on id"
+  (car (remove-if #'(lambda (item)
+		 (if (= (getf item :id) (parse-integer id))
+		     nil
+		     t)) *board*)))
+
+(defun find-card (list-id card-id)
+  "Find card from list"
+  (let* ((x-list (find-list list-id))
+	(cards (getf x-list :cards)))
+    (car (remove-if #'(lambda (item)
+		   (if (= (getf item :id) (parse-integer card-id))
+		       nil
+		       t
+		       )) cards))))
+
+(defroute "/cards/edit/:list-id/:id" (&key list-id id)
+  (render #P"_edit-card.html" (list
+			       :id id
+			       :list (find-list list-id)
+			       :card (find-card list-id id))))
+
+(defroute "/cards/cancel-edit/:list-id/:id" (&key list-id id)
+  (render #P"_card.html" (list
+			  :id id
+			  :list (find-list list-id)
+			  :card (find-card list-id id))))
 
 ;;
 ;; Error pages
