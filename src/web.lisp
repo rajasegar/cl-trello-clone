@@ -44,35 +44,45 @@
 		       t
 		       )) cards))))
 
+(defun get-param (parsed name)
+  "Get param values from parsed"
+  (cdr (assoc name parsed :test #'string=)))
+
 ;;
 ;; Routing rules
 
+;; Home page
 (defroute "/" ()
   (render #P"index.html" (list :board *board*)))
 
+;; Show add list form
 (defroute "/lists/add" ()
   (render #P"_add-list.html"))
 
+;; Cancel add list
 (defroute "/lists/cancel" ()
   (render #P"_new-list.html"))
 
+;; Add new lists
 (defroute ("/lists" :method :POST) (&key _parsed)
-  (let ((name (cdr (assoc "name" _parsed :test #'string=))))
-    (push (list :name name :id (+ 1 (length *board*)) :cards ()) *board*)
-    (render #P"_board.html" (list :board (reverse *board*)))))
+  (let* ((name (get-param _parsed "name"))
+	(new-list (list :name name :id (+ 1 (length *board*)) :cards ())))
+    (if (last *board*)
+	(push new-list (cdr (last *board*)))
+	(push new-list *board*))
+    (render #P"_board.html" (list :board *board*))))
 
 ;; New card
 (defroute ("/cards/new/:list-id" :method :POST) (&key list-id _parsed)
-  (format t "~a~%" (cdr (assoc (concatenate 'string "label-" list-id) _parsed :test #'string=)))
   (let* ((label (cdr (assoc (concatenate 'string "label-" list-id) _parsed :test #'string=)))
-         (card (list :label label :list-id list-id :id (get-universal-time)))
+         (new-card (list :label label :list-id list-id :id (get-universal-time)))
          (x-list (find-list list-id))
          (cards (getf x-list :cards)))
     (if (last cards)
-        (push card (cdr (last cards)))
-        (push card cards))
+        (push new-card (cdr (last cards)))
+        (push new-card cards))
     (setf (getf x-list :cards) cards)
-    (render #P"_new-card.html" (list :card card :list (find-list list-id)))))
+    (render #P"_new-card.html" (list :card new-card :list (find-list list-id)))))
 
 
 ;; Edit card
@@ -91,7 +101,7 @@
 
 ;; Update card
 (defroute ("/cards/:list-id/:id" :method :PUT) (&key list-id id _parsed)
-  (let ((label (cdr (assoc "label" _parsed :test #'string=)))
+  (let ((label (get-param _parsed "label"))
         (card (find-card list-id id)))
     (setf (getf card :label) label)
     (render #P"_card.html" (list :card card))))
@@ -109,7 +119,22 @@
 ;; Move cards
 (defroute ("/cards/move" :method :POST) (&key _parsed)
   (format t "~a~%" _parsed)
-  (render #P"_board.html" (list :board (reverse *board*))))
+  (let* ((from (second (cl-ppcre:split "-" (get-param _parsed "from"))))
+	(to (second (cl-ppcre:split "-" (get-param _parsed "to"))))
+	 (card-id (second (cl-ppcre:split "-" (get-param _parsed "movedCard"))))
+	 (from-list (find-list from))
+	 (to-list (find-list to))
+	 (card (find-card from card-id)))
+    ;; Point card to the new list
+    (setf (getf card :list)  to)
+    ;; Remove card from old list
+    (setf (getf from-list :cards) (remove-if #'(lambda (item)
+						 (if (= (parse-integer card-id)  (getf item :id))
+						     t
+						     nil)) (getf from-list :cards)))
+    ;; Push card to new list
+    (push card (getf to-list :cards))
+  (render #P"_board.html" (list :board *board*))))
 
 ;;
 ;; Error pages
