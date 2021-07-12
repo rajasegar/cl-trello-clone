@@ -79,7 +79,9 @@ code {
 .list-title {
     cursor: pointer;
     padding: 10px;
-    overflow-wrap: break-word
+    overflow-wrap: break-word;
+    display: flex;
+    justify-content: space-between;
 }
 
 .toggle-add-card {

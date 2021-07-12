@@ -72,6 +72,14 @@
 	(push new-list *board*))
     (render #P"_board.html" (list :board *board*))))
 
+
+(defroute ("/lists/:id" :method :DELETE) (&key id)
+  (setf *board* (remove-if #'(lambda (item)
+			       (if (= (parse-integer id) (getf item :id))
+				   t
+				   nil)) *board*))
+  (render #P"_board.html" (list :board *board*)))
+
 ;; New card
 (defroute ("/cards/new/:list-id" :method :POST) (&key list-id _parsed)
   (let* ((label (cdr (assoc (concatenate 'string "label-" list-id) _parsed :test #'string=)))

@@ -1,6 +1,13 @@
 {% for list in board %}
-<div class="list">
-  <div class="list-title">{{list.name}}</div>
+<div class="list" id="list-{{list.id}}">
+  <div class="list-title" _="on mouseenter toggle .hidden on #list-edit-{{list.id}} until mouseleave">
+    <div>{{list.name}}</div>
+    <div id="list-edit-{{list.id}}" class="hidden">
+      <button type="button" class="card-icon" hx-delete="/lists/{{list.id}}" hx-target="#board">
+      {% include "svg-close.html" %}
+      </button>
+    </div>
+  </div>
   <div class="list-cards sortable" id="list-{{list.id}}">
     {% for card in list.cards %}
     <div
