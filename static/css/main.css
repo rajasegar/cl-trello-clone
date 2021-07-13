@@ -82,6 +82,7 @@ code {
     overflow-wrap: break-word;
     display: flex;
     justify-content: space-between;
+    position: relative;
 }
 
 .toggle-add-card {
@@ -173,7 +174,8 @@ code {
     border: none;
     resize: none;
     outline: none;
-    font-size: 15px
+    font-size: 15px;
+    height:34px;
 }
 
 .edit-buttons {
@@ -192,7 +194,8 @@ code {
     border-radius: 5px;
     border: none;
     color: #fff;
-    outline: none
+    outline: none;
+    background-color: rgb(90,172,68);
 }
 
 .edit-button:hover {
@@ -232,7 +235,9 @@ code {
     resize: none;
     outline: none;
     font-size: 15px;
-    padding: 5px
+    padding: 5px;
+    width: 245px;
+    height: 17px;
 }
 
 .list-title-textarea:focus {
@@ -251,3 +256,21 @@ code {
   display: none;
 }
 
+.list-close-icon {
+    cursor: pointer;
+    height: 24px;
+    border-radius: 5px;
+    color: black;
+    font-weight: bolder;
+    opacity: .9;
+    border: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}
+
+.delete-button {
+    background-color: rgb(234, 37, 37);
+}

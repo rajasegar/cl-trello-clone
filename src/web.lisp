@@ -67,12 +67,10 @@
 (defroute ("/lists" :method :POST) (&key _parsed)
   (let* ((name (get-param _parsed "name"))
 	(new-list (list :name name :id (+ 1 (length *board*)) :cards ())))
-    (if (last *board*)
-	(push new-list (cdr (last *board*)))
-	(push new-list *board*))
+    (setf *board* (append *board* (list new-list)))
     (render #P"_board.html" (list :board *board*))))
 
-
+;; Delete lists
 (defroute ("/lists/:id" :method :DELETE) (&key id)
   (setf *board* (remove-if #'(lambda (item)
 			       (if (= (parse-integer id) (getf item :id))
@@ -82,14 +80,12 @@
 
 ;; New card
 (defroute ("/cards/new/:list-id" :method :POST) (&key list-id _parsed)
-  (let* ((label (cdr (assoc (concatenate 'string "label-" list-id) _parsed :test #'string=)))
+  (let* ((label (get-param _parsed (concatenate 'string "label-" list-id)))
          (new-card (list :label label :list-id list-id :id (get-universal-time)))
          (x-list (find-list list-id))
          (cards (getf x-list :cards)))
-    (if (last cards)
-        (push new-card (cdr (last cards)))
-        (push new-card cards))
-    (setf (getf x-list :cards) cards)
+    (setf cards (append cards (list new-card))
+          (getf x-list :cards) cards)
     (render #P"_new-card.html" (list :card new-card :list (find-list list-id)))))
 
 
@@ -126,7 +122,6 @@
 
 ;; Move cards
 (defroute ("/cards/move" :method :POST) (&key _parsed)
-  (format t "~a~%" _parsed)
   (let* ((from (second (cl-ppcre:split "-" (get-param _parsed "from"))))
 	(to (second (cl-ppcre:split "-" (get-param _parsed "to"))))
 	 (card-id (second (cl-ppcre:split "-" (get-param _parsed "movedCard"))))
